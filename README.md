@@ -103,8 +103,6 @@ pcap2cert --outdir certs_out --check
 ## 5. Output
 
 * By default, the folder `certs_out/` (or `--outdir`) will contain PEM files.
-* With `--combine-chain`, you get `IP_streamNN.chain.pem` containing multiple `-----BEGIN CERTIFICATE-----` blocks concatenated.
-* With `--keep-intermediate`, you also keep `.hex` and `.der` files for debugging.
 
 To inspect a PEM:
 
@@ -116,7 +114,7 @@ openssl x509 -in certs/<file>.pem -noout -subject -issuer -dates -fingerprint -s
 
 ## 6. Tips & Troubleshooting
 
-* If no result: try `--desegment` and `--verbose` to see the raw `tshark` output.
+* If no result: try `--desegment` to see the raw `tshark` output.
 * Check that `tshark` exposes `tls.handshake.certificate`:
 
   ```bash
