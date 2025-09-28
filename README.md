@@ -4,21 +4,23 @@ A small CLI tool to automatically extract TLS/SSL certificates from PCAP/PCAPNG 
 
 > Goal: provide a simple, robust, and auditable way to extract server certificates, full chains,
 > and generate usable PEM files.
+> Features: extract and analyze TLS/SSL certificates, full chains, and session details from PCAP/PCAPNG files. Supports filtering by IP, chain combination, splitting, certificate checks, and output analysis files.
 
 ---
 
 ## 1. Synopsis
 
-`pcap2cert [PCAP] [--ip IP] [--chain] [--combine-chain] [--outdir DIR] [--desegment] [--keep-intermediate] [--verbose]`
+`pcap2cert [-h] [-i IP] [-o OUTDIR] [-s] [-cC] [-d] [-k] [--desegment] [pcap]`
+
+
 
 * `PCAP` : `.pcap` or `.pcapng` file to analyze.
-* `--ip IP` : only keep certificates where `ip.src == IP`.
-* `--chain` : extract the full chain (intermediate certificates included).
-* `--combine-chain` : write the full chain into a **single PEM file** per stream (implies `--chain`).
-* `--outdir DIR` : output directory (default: `certs_out`).
+* `-i, --ip IP` : only keep certificates where `ip.src == IP`.
+* `-o, --outdir DIR` : output directory (default: `certs_out`).
+* `-s, --split` : extract and separate each certificate into individual PEM files per stream.
+* `-cC, --combine-chain` : write the full chain into a **single PEM file** per stream (implies `--chain`).
+* `-k, --check` : Check PEM certificates for common issues.
 * `--desegment` : enable TLS record reassembly (useful when certificates are fragmented).
-* `--keep-intermediate` : keep `.hex` / `.der` temporary files (otherwise only `.pem` remain).
-* `--verbose` : detailed logs for debugging.
 
 ---
 
@@ -34,63 +36,67 @@ sudo apt update && sudo apt install -y tshark openssl vim-common
 * `openssl`: convert DER -> PEM.
 * `xxd` (provided by `vim-common`): convert hex -> binary when needed.
 
-**Python (optional)**: if you want to use the extended Python version:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-Recommended `requirements.txt`:
-
-```text
-pyshark>=0.4.2
-cryptography>=3.4
-tqdm>=4.60.0
-```
-
-> Note: the main script works without `pyshark`; it relies on `tshark` via `subprocess`.
-
 ---
 
-## 3. Quick install (optional)
+## 3. Installation
 
-Make the script executable and install it globally as `pcap2cert`:
-
-```bash
-chmod +x extract_certs_chain.py
-sudo mv extract_certs_chain.py /usr/local/bin/pcap2cert
-# now: pcap2cert --help
-```
-
+1. Install the tool in Production mode:
+   - Using pip:
+     ```sh
+     pip install .
+     ```
+   - Using uv:
+     ```sh
+     uv tool install .
+     ```
+2. Install the tool in editable / development mode:
+   - Using pip:
+     ```sh
+     pip install -e .
+     ```
+   - Using uv:
+     ```sh
+     uv tool install --editable .
+     ```
 ---
 
 ## 4. Usage examples
 
-1. Extract the server certificate (default):
+1. Extract all certificates chain from a PCAP:
 
 ```bash
-pcap2cert ~/pcaps/session.pcap --outdir certs
+pcap2cert capture.pcap
 ```
 
-2. Extract only from a given source IP:
+2. Extract certificates for a specific IP:
 
 ```bash
-pcap2cert ~/pcaps/session.pcap --ip 178.249.97.99 --outdir certs
+pcap2cert capture.pcap --ip 8.8.8.8
 ```
 
-3. Extract the full chain and write a single PEM per stream:
+3. Extract and analyze with details (TLS session info & Certificate details):
 
 ```bash
-pcap2cert ~/pcaps/session.pcap --ip 178.249.97.99 --chain --combine-chain --outdir certs
+pcap2cert capture.pcap --details
 ```
 
-4. Force TLS reassembly (if fields are empty or fragmented):
+4. Extract and analyze with details decompose cert chain:
 
 ```bash
-pcap2cert ~/pcaps/session.pcap --desegment --chain --combine-chain --verbose --outdir certs
+pcap2cert capture.pcap --details --split
 ```
+
+5. Extract and analyze certificate with details and perform minimal check on certs:
+
+```bash
+pcap2cert capture.pcap --details --check
+``` 
+
+6. Run checks only on existing certificates:
+
+```bash
+pcap2cert --outdir certs_out --check
+``` 
 
 ---
 
